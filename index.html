@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель ведущего</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400&family=Manrope:wght@400&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="page">
+        <!-- Декоративный фон -->
+        <div class="page__background">
+            <img src="img/background.svg" alt="" class="page__background-image">
+        </div>
+
+        <!-- Шапка -->
+        <header class="header">
+            <h1 class="header__title">Панель ведущего</h1>
+            <div class="header__line"></div>
+        </header>
+
+        <!-- Навигация -->
+        <nav class="nav">
+            <a href="#" class="nav__link nav__link--active" data-tab="broadcasts">Трансляции</a>
+            <a href="#" class="nav__link" data-tab="quizzes">Квизы</a>
+            <a href="#" class="nav__link" data-tab="statistics">Статистика</a>
+        </nav>
+
+        <!-- Индикатор активной вкладки -->
+        <div class="tab-indicator">
+            <div class="tab-indicator__bg"></div>
+            <div class="tab-indicator__active"></div>
+        </div>
+
+        <!-- Карточки трансляций -->
+        <div class="broadcast-cards">
+            <!-- Карточка 1 -->
+            <article class="broadcast-card">
+                <div class="broadcast-card__bg"></div>
+                <button class="broadcast-card__close" aria-label="Закрыть карточку">
+                    <img src="img/close-icon.svg" alt="" class="broadcast-card__close-icon">
+                </button>
+                
+                <div class="broadcast-card__play-wrapper">
+                    <div class="broadcast-card__play-icon">
+                        <img src="img/play-icon.svg" alt="" class="broadcast-card__play-triangle">
+                    </div>
+                </div>
+
+                <h3 class="broadcast-card__title">Трансляция</h3>
+                <p class="broadcast-card__date">20.11.25  12:00</p>
+                <p class="broadcast-card__description">оаоиолыивлиаоивмровиу.</p>
+
+                <div class="broadcast-card__pattern">
+                    <img src="img/card-pattern.svg" alt="" class="broadcast-card__pattern-image">
+                </div>
+
+                <div class="broadcast-card__actions">
+                    <button class="button button--primary">Начать трансляцию</button>
+                    <button class="button button--secondary">Добавить квиз</button>
+                </div>
+            </article>
+
+            <!-- Карточка 2 -->
+            <article class="broadcast-card">
+                <div class="broadcast-card__bg"></div>
+                <button class="broadcast-card__close" aria-label="Закрыть карточку">
+                    <img src="img/close-icon.svg" alt="" class="broadcast-card__close-icon">
+                </button>
+                
+                <div class="broadcast-card__play-wrapper">
+                    <div class="broadcast-card__play-icon">
+                        <img src="img/play-icon.svg" alt="" class="broadcast-card__play-triangle">
+                    </div>
+                </div>
+
+                <h3 class="broadcast-card__title">Трансляция</h3>
+                <p class="broadcast-card__date">20.11.25  12:00</p>
+                <p class="broadcast-card__description">оаоиолыивлиаоивмровиу.</p>
+
+                <div class="broadcast-card__pattern">
+                    <img src="img/card-pattern.svg" alt="" class="broadcast-card__pattern-image">
+                </div>
+
+                <div class="broadcast-card__actions">
+                    <button class="button button--primary">Начать трансляцию</button>
+                    <button class="button button--secondary">Добавить квиз</button>
+                </div>
+            </article>
+        </div>
+
+        <!-- Кнопки в шапке -->
+        <div class="header-actions">
+            <button class="button button--secondary button--header">Создать квиз</button>
+            <button class="button button--primary button--header">Создать трансляцию</button>
+            <div class="user-icon">
+                <img src="img/user-icon.svg" alt="Профиль пользователя" class="user-icon__image">
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
