@@ -12,9 +12,7 @@
 <body>
     <div class="page">
         <!-- Декоративный фон -->
-        <div class="page__background">
-            <img src="img/background.svg" alt="" class="page__background-image">
-        </div>
+        <div class="page__background"></div>
 
         <!-- Шапка -->
         <header class="header">
@@ -30,13 +28,13 @@
         </nav>
 
         <!-- Индикатор активной вкладки -->
-        <div class="tab-indicator">
+        <div class="tab-indicator" data-active="broadcasts">
             <div class="tab-indicator__bg"></div>
             <div class="tab-indicator__active"></div>
         </div>
 
         <!-- Карточки трансляций -->
-        <div class="broadcast-cards">
+        <div class="broadcast-cards" data-tab-content="broadcasts">
             <!-- Карточка 1 -->
             <article class="broadcast-card">
                 <div class="broadcast-card__bg"></div>
@@ -60,7 +58,7 @@
 
                 <div class="broadcast-card__actions">
                     <button class="button button--primary">Начать трансляцию</button>
-                    <button class="button button--secondary">Добавить квиз</button>
+                    <button class="button button--secondary" data-modal="add-quiz">Добавить квиз</button>
                 </div>
             </article>
 
@@ -87,20 +85,214 @@
 
                 <div class="broadcast-card__actions">
                     <button class="button button--primary">Начать трансляцию</button>
-                    <button class="button button--secondary">Добавить квиз</button>
+                    <button class="button button--secondary" data-modal="add-quiz">Добавить квиз</button>
+                </div>
+            </article>
+        </div>
+
+        <!-- Карточки квизов -->
+        <div class="broadcast-cards" data-tab-content="quizzes" style="display: none;">
+            <!-- Карточка квиза 1 -->
+            <article class="broadcast-card quiz-card">
+                <div class="broadcast-card__bg"></div>
+                <button class="broadcast-card__close" aria-label="Закрыть карточку">
+                    <img src="img/close-icon.svg" alt="" class="broadcast-card__close-icon">
+                </button>
+                
+                <div class="broadcast-card__play-wrapper">
+                    <img src="img/Warning.svg" alt="" class="quiz-card__icon">
+                </div>
+
+                <h3 class="broadcast-card__title">Квиз</h3>
+                <p class="broadcast-card__date">n вопросов</p>
+                <p class="broadcast-card__description">оаоиолыивлиаоивмровиу.</p>
+
+                <div class="broadcast-card__pattern">
+                    <img src="img/card-pattern.svg" alt="" class="broadcast-card__pattern-image">
+                </div>
+
+                <div class="broadcast-card__actions">
+                    <button class="button button--primary button--small">Просмотр</button>
+                    <button class="button button--secondary button--small">Изменить</button>
+                </div>
+            </article>
+
+            <!-- Карточка квиза 2 -->
+            <article class="broadcast-card quiz-card">
+                <div class="broadcast-card__bg"></div>
+                <button class="broadcast-card__close" aria-label="Закрыть карточку">
+                    <img src="img/close-icon.svg" alt="" class="broadcast-card__close-icon">
+                </button>
+                
+                <div class="broadcast-card__play-wrapper">
+                    <img src="img/Warning.svg" alt="" class="quiz-card__icon">
+                </div>
+
+                <h3 class="broadcast-card__title">Квиз</h3>
+                <p class="broadcast-card__date">n вопросов</p>
+                <p class="broadcast-card__description">оаоиолыивлиаоивмровиу.</p>
+
+                <div class="broadcast-card__pattern">
+                    <img src="img/card-pattern.svg" alt="" class="broadcast-card__pattern-image">
+                </div>
+
+                <div class="broadcast-card__actions">
+                    <button class="button button--primary button--small">Просмотр</button>
+                    <button class="button button--secondary button--small">Изменить</button>
+                </div>
+            </article>
+        </div>
+
+        <!-- Карточки статистики -->
+        <div class="broadcast-cards" data-tab-content="statistics" style="display: none;">
+            <!-- Карточка статистики 1 -->
+            <article class="broadcast-card">
+                <div class="broadcast-card__bg"></div>
+                <button class="broadcast-card__close" aria-label="Закрыть карточку">
+                    <img src="img/close-icon.svg" alt="" class="broadcast-card__close-icon">
+                </button>
+                
+                <div class="broadcast-card__play-wrapper">
+                    <img src="img/statistics.svg" alt="" class="statistics-card__icon">
+                </div>
+
+                <h3 class="broadcast-card__title">Трансляция</h3>
+                <p class="broadcast-card__date">10.10.2025 12:00</p>
+                <p class="broadcast-card__description">оаоиолыивлиаоивмровиу.</p>
+
+                <div class="broadcast-card__pattern">
+                    <img src="img/card-pattern.svg" alt="" class="broadcast-card__pattern-image">
+                </div>
+
+                <div class="broadcast-card__actions">
+                    <button class="button button--primary button--export">Выгрузить в формате CSV</button>
+                    <button class="button button--secondary button--export">Выгрузить в Google Таблицы</button>
+                </div>
+            </article>
+
+            <!-- Карточка статистики 2 -->
+            <article class="broadcast-card">
+                <div class="broadcast-card__bg"></div>
+                <button class="broadcast-card__close" aria-label="Закрыть карточку">
+                    <img src="img/close-icon.svg" alt="" class="broadcast-card__close-icon">
+                </button>
+                
+                <div class="broadcast-card__play-wrapper">
+                    <img src="img/statistics.svg" alt="" class="statistics-card__icon">
+                </div>
+
+                <h3 class="broadcast-card__title">Трансляция</h3>
+                <p class="broadcast-card__date">10.10.2025 12:00</p>
+                <p class="broadcast-card__description">оаоиолыивлиаоивмровиу.</p>
+
+                <div class="broadcast-card__pattern">
+                    <img src="img/card-pattern.svg" alt="" class="broadcast-card__pattern-image">
+                </div>
+
+                <div class="broadcast-card__actions">
+                    <button class="button button--primary button--export">Выгрузить в формате CSV</button>
+                    <button class="button button--secondary button--export">Выгрузить в Google Таблицы</button>
                 </div>
             </article>
         </div>
 
         <!-- Кнопки в шапке -->
         <div class="header-actions">
-            <button class="button button--secondary button--header">Создать квиз</button>
-            <button class="button button--primary button--header">Создать трансляцию</button>
-            <div class="user-icon">
+            <button class="button button--secondary button--header" data-modal="create-quiz">Создать квиз</button>
+            <button class="button button--primary button--header" data-modal="create-broadcast-new">Создать трансляцию</button>
+            <div class="user-icon" data-dropdown="user-menu">
                 <img src="img/user-icon.svg" alt="Профиль пользователя" class="user-icon__image">
             </div>
         </div>
+
+        <!-- Модальное окно: Создать трансляцию -->
+        <div class="modal" id="modal-create-broadcast">
+            <div class="modal__overlay"></div>
+            <div class="modal__content modal__content--create">
+                <form class="modal__form">
+                    <div class="form-group">
+                        <input type="text" class="form-input form-input--placeholder" placeholder="Название">
+                    </div>
+                    <div class="form-group">
+                        <textarea class="form-textarea form-textarea--placeholder" placeholder="Описание"></textarea>
+                    </div>
+                    <div class="modal__actions modal__actions--single">
+                        <button type="submit" class="button button--next">Далее</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Модальное окно: Создать квиз -->
+        <div class="modal" id="modal-create-quiz">
+            <div class="modal__overlay modal__overlay--hidden"></div>
+            <div class="modal__content modal__content--create-quiz">
+                <form class="modal__form">
+                    <div class="form-group">
+                        <input type="text" class="form-input form-input--placeholder" placeholder="Название">
+                    </div>
+                    <div class="form-group">
+                        <textarea class="form-textarea form-textarea--placeholder" placeholder="Описание"></textarea>
+                    </div>
+                    <div class="modal__actions modal__actions--single">
+                        <button type="submit" class="button button--next">Далее</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Модальное окно: Создать трансляцию -->
+        <div class="modal" id="modal-create-broadcast-new">
+            <div class="modal__overlay modal__overlay--hidden"></div>
+            <div class="modal__content modal__content--create-quiz">
+                <form class="modal__form">
+                    <div class="form-group">
+                        <input type="text" class="form-input form-input--placeholder" placeholder="Название">
+                    </div>
+                    <div class="form-group">
+                        <textarea class="form-textarea form-textarea--placeholder" placeholder="Описание"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <input type="datetime-local" class="form-input form-input--placeholder" placeholder="Дата">
+                    </div>
+                    <div class="modal__actions modal__actions--single">
+                        <button type="submit" class="button button--next">Запланировать</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Выпадающий список квизов -->
+        <div class="dropdown" id="dropdown-quiz-list">
+            <div class="dropdown__content">
+                <div class="dropdown__item">Название 1</div>
+                <div class="dropdown__item">Название 2</div>
+                <div class="dropdown__item">Название 3</div>
+            </div>
+        </div>
+
+        <!-- Выпадающее меню пользователя -->
+        <div class="dropdown" id="dropdown-user-menu">
+            <div class="dropdown__content dropdown__content--user">
+                <div class="dropdown__user-item">
+                    <img src="img/Message_light.svg" alt="" class="dropdown__icon-svg">
+                    <span>Email</span>
+                </div>
+                <div class="dropdown__user-item">
+                    <img src="img/User_scan_light.svg" alt="" class="dropdown__icon-svg">
+                    <span>Роман Максимов</span>
+                </div>
+                <div class="dropdown__divider">
+                    <img src="img/line-icon.svg" alt="" class="dropdown__divider-line">
+                </div>
+                <div class="dropdown__user-item">
+                    <img src="img/exit.svg" alt="" class="dropdown__icon-svg">
+                    <span>Выход</span>
+                </div>
+            </div>
+        </div>
     </div>
+    <script src="script.js"></script>
 </body>
 </html>
 

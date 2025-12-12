@@ -18,7 +18,7 @@
     --container-width: 1920px;
     --container-height: 1080px;
     --header-height: 96px;
-    --card-width: 836px;
+    --card-width: 650px;
     --card-height: 245px;
     --button-height: 39px;
     --border-radius-small: 5px;
@@ -85,16 +85,13 @@ body {
     overflow: hidden;
     pointer-events: none;
     z-index: 0;
-}
-
-.page__background-image {
-    position: absolute;
-    top: -105%;
-    left: -93%;
-    width: calc(100% + 186%);
-    height: calc(100% + 210%);
-    object-fit: contain;
-    object-position: center;
+    background: radial-gradient(ellipse at center,
+        rgba(72, 88, 193, 0.15) 0%,
+        rgba(83, 96, 166, 0.1) 30%,
+        rgba(155, 160, 203, 0.05) 60%,
+        transparent 100%);
+    border-radius: 50%;
+    transform: scale(1.5);
 }
 
 /* Шапка */
@@ -134,7 +131,8 @@ body {
     position: absolute;
     left: calc(4% + 19px);
     top: 158px;
-    width: 100%;
+    width: 423px;
+    max-width: 423px;
 }
 
 .nav__link {
@@ -157,12 +155,12 @@ body {
 }
 
 .nav__link:nth-child(2) {
-    left: calc(8% + 60px + 40px);
+    left: 200px;
     transform: translateX(-50%);
 }
 
 .nav__link:nth-child(3) {
-    left: calc(16% + 41px + 80px);
+    left: 323px;
     transform: translateX(-50%);
 }
 
@@ -181,14 +179,17 @@ body {
     top: 201px;
     width: 423px;
     height: var(--spacing-xs);
+    overflow: hidden;
 }
 
 .tab-indicator__bg {
     position: absolute;
     background-color: var(--color-indicator-bg);
     height: var(--spacing-xs);
-    width: 100%;
+    width: 423px;
     border-radius: var(--border-radius-small);
+    left: 0;
+    top: 0;
 }
 
 .tab-indicator__active {
@@ -197,33 +198,52 @@ body {
     height: var(--spacing-xs);
     border-radius: var(--border-radius-small);
     width: 152px;
+    left: 0;
+    transition: left 0.3s, width 0.3s;
+}
+
+.tab-indicator[data-active="broadcasts"] .tab-indicator__active {
+    left: 0;
+    width: 152px;
+}
+
+.tab-indicator[data-active="quizzes"] .tab-indicator__active {
+    left: 140px;
+    width: 122px;
+}
+
+.tab-indicator[data-active="statistics"] .tab-indicator__active {
+    left: 245px;
+    width: 178px;
+}
+
+.tab-indicator__active {
+    top: 0;
 }
 
 /* Контейнер карточек */
 .broadcast-cards {
     position: absolute;
-    left: 0;
+    left: calc(4% + 19px);
     top: 263px;
-    width: 100%;
+    right: calc(4% + 19px);
     display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
+    flex-wrap: nowrap;
+    gap: 40px;
 }
 
 /* Карточка трансляции */
 .broadcast-card {
     position: relative;
-    width: var(--card-width);
-    max-width: 100%;
+    width: calc((100% - 40px) / 2);
+    min-width: 0;
     height: var(--card-height);
-    flex-shrink: 0;
+    flex-shrink: 1;
+    flex-grow: 1;
 }
 
-@media (max-width: 1800px) {
-    .broadcast-card {
-        width: 100%;
-        max-width: var(--card-width);
-    }
+.broadcast-card:not(:last-child) {
+    margin-right: 0;
 }
 
 .broadcast-card__bg {
@@ -231,7 +251,7 @@ body {
     background: var(--color-card-bg);
     border: var(--border-width) solid var(--color-white);
     height: var(--card-height);
-    width: var(--card-width);
+    width: 100%;
     opacity: var(--color-card-opacity);
     border-radius: var(--border-radius-large);
     box-shadow: var(--shadow-card);
@@ -303,16 +323,27 @@ body {
     display: block;
 }
 
+.quiz-card__icon {
+    width: 30px;
+    height: 28px;
+    display: block;
+}
+
+.statistics-card__icon {
+    width: 24px;
+    height: 24px;
+    display: block;
+}
+
 .broadcast-card__title {
     position: absolute;
     font-family: var(--font-family-body);
     font-size: var(--font-size-card-title);
     font-weight: var(--font-weight-normal);
     color: var(--color-text-primary);
-    text-align: center;
+    text-align: left;
     top: 29px;
-    left: 50%;
-    transform: translateX(-50%);
+    left: calc(40px + var(--spacing-md) + 10px);
     line-height: normal;
     white-space: nowrap;
     z-index: 5;
@@ -328,6 +359,7 @@ body {
     left: calc(40px + var(--spacing-md) + 10px);
     line-height: normal;
     z-index: 5;
+    white-space: nowrap;
 }
 
 .broadcast-card__description {
@@ -336,12 +368,12 @@ body {
     font-size: var(--font-size-card-description);
     font-weight: var(--font-weight-normal);
     color: var(--color-text-secondary);
-    text-align: center;
+    text-align: left;
     top: 108px;
-    left: 50%;
-    transform: translateX(-50%);
+    left: calc(40px + var(--spacing-md) + 10px);
     line-height: normal;
     z-index: 5;
+    max-width: calc(100% - calc(40px + var(--spacing-md) + 10px) * 2);
 }
 
 .broadcast-card__pattern {
@@ -370,8 +402,9 @@ body {
     left: var(--spacing-md);
     right: var(--spacing-md);
     display: flex;
-    gap: 10px;
-    justify-content: space-between;
+    gap: 30px;
+    justify-content: flex-start;
+    align-items: center;
     z-index: 5;
 }
 
@@ -409,6 +442,20 @@ body {
     border-color: var(--color-secondary);
     color: var(--color-secondary);
     width: 155px;
+}
+
+.button--small {
+    width: auto;
+    min-width: 110px;
+}
+
+.button--export {
+    width: auto;
+    min-width: 259px;
+}
+
+.button--secondary.button--export {
+    min-width: 277px;
 }
 
 .button--secondary:hover {
@@ -471,10 +518,6 @@ body {
     .page {
         width: 100%;
     }
-    
-    .broadcast-card {
-        width: min(var(--card-width), calc(100vw - 40px));
-    }
 }
 
 @media (max-width: 1200px) {
@@ -486,23 +529,340 @@ body {
         margin-left: min(calc(4% + 19px), 20px);
         justify-content: flex-start;
     }
-    
+
     .header__title {
         font-size: 24px;
     }
-    
+
     .nav__link {
         font-size: 16px;
     }
-    
+
     .button {
         font-size: 16px;
         padding: 0 15px;
     }
-    
+
     .button--primary,
     .button--secondary {
         width: auto;
         min-width: 120px;
     }
+}
+
+/* Модальные окна */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal#modal-create-broadcast.active {
+    align-items: flex-start;
+    justify-content: flex-start;
+}
+
+.modal__overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal__overlay--hidden {
+    display: none;
+}
+
+.modal__content {
+    position: relative;
+    background-color: var(--color-white);
+    border-radius: var(--border-radius-large);
+    padding: var(--spacing-xl);
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    z-index: 1001;
+    box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.modal__close {
+    position: absolute;
+    top: var(--spacing-md);
+    right: var(--spacing-md);
+    width: var(--spacing-md);
+    height: var(--spacing-md);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1002;
+    transition: opacity 0.2s;
+}
+
+.modal__close:hover {
+    opacity: 0.7;
+}
+
+.modal__close-icon {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.modal__title {
+    font-family: var(--font-family-title);
+    font-size: var(--font-size-title);
+    color: var(--color-text-accent);
+    margin-bottom: var(--spacing-xl);
+    font-weight: var(--font-weight-normal);
+}
+
+.modal__form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.form-label {
+    font-family: var(--font-family-body);
+    font-size: var(--font-size-card-description);
+    color: var(--color-text-primary);
+    font-weight: var(--font-weight-normal);
+}
+
+.form-input,
+.form-textarea {
+    font-family: var(--font-family-body);
+    font-size: var(--font-size-card-description);
+    padding: 10px var(--spacing-md);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--border-radius-medium);
+    color: var(--color-text-primary);
+    background-color: var(--color-white);
+    transition: border-color 0.2s;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+.form-textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.modal__actions {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: flex-end;
+    margin-top: var(--spacing-md);
+}
+
+.modal__cancel {
+    width: auto;
+    min-width: 120px;
+}
+
+.modal__content--create {
+    max-width: 452px;
+    width: 452px;
+    padding: var(--spacing-lg);
+    padding-top: var(--spacing-xl);
+    position: relative;
+    margin: 0;
+}
+
+.modal__content--create .modal__form {
+    gap: var(--spacing-md);
+}
+
+.modal__content--create-quiz {
+    max-width: 452px;
+    width: 452px;
+    padding: var(--spacing-lg);
+    padding-top: var(--spacing-xl);
+    position: fixed;
+    margin: 0;
+}
+
+.form-input--placeholder,
+.form-textarea--placeholder {
+    border: 1px solid #273693;
+    border-radius: 9px;
+    padding: 12px var(--spacing-md);
+    font-size: var(--font-size-button);
+    color: #8990bd;
+}
+
+.form-input--placeholder::placeholder,
+.form-textarea--placeholder::placeholder {
+    color: #8990bd;
+}
+
+.form-textarea--placeholder {
+    min-height: 152px;
+}
+
+.modal__actions--single {
+    justify-content: center;
+    margin-top: 0;
+    padding-top: var(--spacing-md);
+}
+
+.button--next {
+    background: #c8cff6;
+    border: none;
+    color: var(--color-text-primary);
+    width: auto;
+    min-width: 96px;
+    padding-left: var(--spacing-md);
+    padding-right: var(--spacing-md);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.button--next:hover {
+    background: #b8c5f0;
+}
+
+/* Выпадающие списки */
+.dropdown {
+    position: fixed;
+    display: none;
+    z-index: 1000;
+}
+
+.dropdown.active {
+    display: block;
+}
+
+.dropdown__content {
+    background-color: var(--color-white);
+    border-radius: 10px;
+    box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.3), 0px 2px 6px 2px rgba(0, 0, 0, 0.15);
+    padding: var(--spacing-md) 0;
+    width: 452px;
+}
+
+#dropdown-quiz-list .dropdown__content {
+    width: 400px;
+    height: 122px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+}
+
+.dropdown__content--user {
+    width: 295px;
+    max-width: 295px;
+    padding: var(--spacing-md);
+    box-sizing: border-box;
+}
+
+.dropdown__item {
+    font-family: var(--font-family-body);
+    font-size: var(--font-size-button);
+    color: #212121;
+    padding: 0 var(--spacing-lg);
+    cursor: pointer;
+    transition: background-color 0.2s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.dropdown__item:hover {
+    background-color: #f5f5f5;
+}
+
+.dropdown__user-item {
+    font-family: var(--font-family-body);
+    font-size: var(--font-size-button);
+    color: #212121;
+    padding: var(--spacing-sm) 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    transition: opacity 0.2s;
+}
+
+.dropdown__user-item:hover {
+    opacity: 0.7;
+}
+
+.dropdown__icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.dropdown__icon-svg {
+    width: 32px;
+    height: 35px;
+    flex-shrink: 0;
+    display: block;
+}
+
+.dropdown__user-item:nth-child(2) .dropdown__icon-svg {
+    width: 27px;
+    height: 27px;
+}
+
+.dropdown__user-item:last-child .dropdown__icon-svg {
+    width: 24px;
+    height: 24px;
+}
+
+.dropdown__divider {
+    height: 1px;
+    margin: var(--spacing-md) 0;
+    display: flex;
+    align-items: center;
+}
+
+.dropdown__divider-line {
+    width: 100%;
+    height: 1px;
+    display: block;
+}
+
+/* Позиционирование выпадающего списка квизов */
+#dropdown-quiz-list {
+    position: fixed;
+}
+
+/* Позиционирование выпадающего меню пользователя */
+#dropdown-user-menu {
+    right: calc(4% + 19.2px);
+    top: 84px;
 }
