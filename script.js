@@ -1,23 +1,23 @@
+// Глобальные функции для управления скроллом
+function preventBodyScroll() {
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    if (scrollbarWidth > 0) {
+        document.body.style.paddingRight = scrollbarWidth + 'px';
+    }
+    document.body.style.overflow = 'hidden';
+}
+
+function restoreBodyScroll() {
+    document.body.style.paddingRight = '';
+    document.body.style.overflow = '';
+}
+
 // Управление модальными окнами
 document.addEventListener('DOMContentLoaded', function() {
     // Получаем все кнопки, которые открывают модальные окна
     const modalTriggers = document.querySelectorAll('[data-modal]');
     const modals = document.querySelectorAll('.modal');
     const modalCloses = document.querySelectorAll('.modal__close, .modal__cancel');
-
-    // Функция для предотвращения сдвига контента при открытии модального окна
-    function preventBodyScroll() {
-        const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-        if (scrollbarWidth > 0) {
-            document.body.style.paddingRight = scrollbarWidth + 'px';
-        }
-        document.body.style.overflow = 'hidden';
-    }
-
-    function restoreBodyScroll() {
-        document.body.style.paddingRight = '';
-        document.body.style.overflow = '';
-    }
 
     // Открытие модального окна
     modalTriggers.forEach(trigger => {
@@ -220,12 +220,362 @@ document.addEventListener('DOMContentLoaded', function() {
             const activeContent = document.querySelector(`[data-tab-content="${tabId}"]`);
             if (activeContent) {
                 activeContent.style.display = 'flex';
+
+                // Обновляем ширину карточек при переключении вкладок
+                if (typeof cardManager !== 'undefined') {
+                    if (tabId === 'broadcasts') {
+                        cardManager.updateCardWidths(cardManager.broadcastsContainer);
+                    } else if (tabId === 'quizzes') {
+                        cardManager.updateCardWidths(cardManager.quizzesContainer);
+                    } else if (tabId === 'statistics') {
+                        cardManager.updateCardWidths(cardManager.statisticsContainer);
+                    }
+                }
             }
 
             // Обновляем индикатор
             if (tabIndicator) {
                 tabIndicator.setAttribute('data-active', tabId);
             }
+        });
+    });
+});
+
+// Функции валидации
+function validateTitle(title, minLength = 3, maxLength = 100) {
+    const trimmed = title.trim();
+    if (!trimmed) {
+        return { valid: false, message: 'Название обязательно для заполнения' };
+    }
+    if (trimmed.length < minLength) {
+        return { valid: false, message: `Название должно содержать минимум ${minLength} символа` };
+    }
+    if (trimmed.length > maxLength) {
+        return { valid: false, message: `Название не должно превышать ${maxLength} символов` };
+    }
+    return { valid: true };
+}
+
+function validateDescription(description, maxLength = 500) {
+    const trimmed = description.trim();
+    if (trimmed && trimmed.length > maxLength) {
+        return { valid: false, message: `Описание не должно превышать ${maxLength} символов` };
+    }
+    return { valid: true };
+}
+
+function validateDate(dateString) {
+    if (!dateString) {
+        return { valid: false, message: 'Дата обязательна для заполнения' };
+    }
+    const selectedDate = new Date(dateString);
+    const now = new Date();
+    now.setSeconds(0, 0); // Убираем секунды и миллисекунды для сравнения
+
+    if (selectedDate < now) {
+        return { valid: false, message: 'Дата не может быть в прошлом' };
+    }
+    return { valid: true };
+}
+
+function showFieldError(field, message) {
+    field.classList.add('error');
+    let errorElement = field.parentElement.querySelector('.form-error');
+    if (!errorElement) {
+        errorElement = document.createElement('div');
+        errorElement.className = 'form-error';
+        field.parentElement.appendChild(errorElement);
+    }
+    errorElement.textContent = message;
+    errorElement.classList.add('show');
+}
+
+function clearFieldError(field) {
+    field.classList.remove('error');
+    const errorElement = field.parentElement.querySelector('.form-error');
+    if (errorElement) {
+        errorElement.classList.remove('show');
+    }
+}
+
+function clearAllErrors(form) {
+    const errorFields = form.querySelectorAll('.error');
+    errorFields.forEach(field => clearFieldError(field));
+}
+
+// Инициализация форм модальных окон
+document.addEventListener('DOMContentLoaded', function() {
+    // Обработчик формы создания квиза
+    const createQuizForm = document.querySelector('#modal-create-quiz form');
+    if (createQuizForm) {
+        const titleInput = createQuizForm.querySelector('input[type="text"]');
+        const descriptionInput = createQuizForm.querySelector('textarea');
+
+        // Валидация в реальном времени
+        if (titleInput) {
+            titleInput.addEventListener('blur', function() {
+                const validation = validateTitle(this.value);
+                if (!validation.valid) {
+                    showFieldError(this, validation.message);
+                } else {
+                    clearFieldError(this);
+                }
+            });
+            titleInput.addEventListener('input', function() {
+                if (this.classList.contains('error')) {
+                    const validation = validateTitle(this.value);
+                    if (validation.valid) {
+                        clearFieldError(this);
+                    }
+                }
+            });
+        }
+
+        if (descriptionInput) {
+            descriptionInput.addEventListener('blur', function() {
+                const validation = validateDescription(this.value);
+                if (!validation.valid) {
+                    showFieldError(this, validation.message);
+                } else {
+                    clearFieldError(this);
+                }
+            });
+            descriptionInput.addEventListener('input', function() {
+                if (this.classList.contains('error')) {
+                    const validation = validateDescription(this.value);
+                    if (validation.valid) {
+                        clearFieldError(this);
+                    }
+                }
+            });
+        }
+
+        createQuizForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            clearAllErrors(this);
+
+            const title = titleInput.value;
+            const description = descriptionInput.value;
+
+            let isValid = true;
+
+            // Валидация названия
+            const titleValidation = validateTitle(title);
+            if (!titleValidation.valid) {
+                showFieldError(titleInput, titleValidation.message);
+                isValid = false;
+            }
+
+            // Валидация описания
+            const descriptionValidation = validateDescription(description);
+            if (!descriptionValidation.valid) {
+                showFieldError(descriptionInput, descriptionValidation.message);
+                isValid = false;
+            }
+
+            if (!isValid) {
+                return;
+            }
+
+            const quizData = {
+                title: title.trim(),
+                description: description.trim(),
+                questionCount: 0, // По умолчанию
+            };
+
+            try {
+                // const response = await apiService.createQuiz(quizData);
+                // quizData.id = response.id;
+
+                // Сохраняем данные квиза для редактора
+                localStorage.setItem('editingQuizTitle', quizData.title);
+                localStorage.setItem('editingQuizDescription', quizData.description);
+                localStorage.setItem('editingQuizId', quizData.id || Date.now());
+
+                // Закрываем модальное окно
+                const modal = this.closest('.modal');
+                if (modal) {
+                    modal.classList.remove('active');
+                    restoreBodyScroll();
+                }
+
+                // Очищаем форму и ошибки
+                clearAllErrors(this);
+                this.reset();
+
+                // Переходим в редактор вопросов
+                window.location.href = 'quiz-editor.html?id=' + (quizData.id || Date.now());
+            } catch (error) {
+                console.error('Ошибка при создании квиза:', error);
+                alert('Ошибка при создании квиза. Попробуйте еще раз.');
+            }
+        });
+    }
+
+    // Обработчик формы создания трансляции
+    const createBroadcastForm = document.querySelector('#modal-create-broadcast-new form');
+    if (createBroadcastForm) {
+        const titleInput = createBroadcastForm.querySelector('input[type="text"]');
+        const descriptionInput = createBroadcastForm.querySelector('textarea');
+        const dateInput = createBroadcastForm.querySelector('input[type="datetime-local"]');
+
+        // Валидация в реальном времени
+        if (titleInput) {
+            titleInput.addEventListener('blur', function() {
+                const validation = validateTitle(this.value);
+                if (!validation.valid) {
+                    showFieldError(this, validation.message);
+                } else {
+                    clearFieldError(this);
+                }
+            });
+            titleInput.addEventListener('input', function() {
+                if (this.classList.contains('error')) {
+                    const validation = validateTitle(this.value);
+                    if (validation.valid) {
+                        clearFieldError(this);
+                    }
+                }
+            });
+        }
+
+        if (descriptionInput) {
+            descriptionInput.addEventListener('blur', function() {
+                const validation = validateDescription(this.value);
+                if (!validation.valid) {
+                    showFieldError(this, validation.message);
+                } else {
+                    clearFieldError(this);
+                }
+            });
+            descriptionInput.addEventListener('input', function() {
+                if (this.classList.contains('error')) {
+                    const validation = validateDescription(this.value);
+                    if (validation.valid) {
+                        clearFieldError(this);
+                    }
+                }
+            });
+        }
+
+        if (dateInput) {
+            // Устанавливаем минимальную дату как текущую
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            dateInput.min = now.toISOString().slice(0, 16);
+
+            dateInput.addEventListener('blur', function() {
+                const validation = validateDate(this.value);
+                if (!validation.valid) {
+                    showFieldError(this, validation.message);
+                } else {
+                    clearFieldError(this);
+                }
+            });
+            dateInput.addEventListener('change', function() {
+                if (this.classList.contains('error')) {
+                    const validation = validateDate(this.value);
+                    if (validation.valid) {
+                        clearFieldError(this);
+                    }
+                }
+            });
+        }
+
+        createBroadcastForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            clearAllErrors(this);
+
+            const title = titleInput.value;
+            const description = descriptionInput.value;
+            const date = dateInput ? dateInput.value : null;
+
+            let isValid = true;
+
+            // Валидация названия
+            const titleValidation = validateTitle(title);
+            if (!titleValidation.valid) {
+                showFieldError(titleInput, titleValidation.message);
+                isValid = false;
+            }
+
+            // Валидация описания
+            const descriptionValidation = validateDescription(description);
+            if (!descriptionValidation.valid) {
+                showFieldError(descriptionInput, descriptionValidation.message);
+                isValid = false;
+            }
+
+            // Валидация даты
+            const dateValidation = validateDate(date);
+            if (!dateValidation.valid) {
+                if (dateInput) {
+                    showFieldError(dateInput, dateValidation.message);
+                }
+                isValid = false;
+            }
+
+            if (!isValid) {
+                return;
+            }
+
+            const broadcastData = {
+                title: title.trim(),
+                description: description.trim(),
+                date: date || new Date().toISOString(),
+            };
+
+            try {
+                // const response = await apiService.createBroadcast(broadcastData);
+                // broadcastData.id = response.id;
+
+                // Добавляем карточку
+                cardManager.addBroadcastCard(broadcastData);
+
+                // Закрываем модальное окно
+                const modal = this.closest('.modal');
+                if (modal) {
+                    modal.classList.remove('active');
+                    restoreBodyScroll();
+                }
+
+                // Очищаем форму и ошибки
+                clearAllErrors(this);
+                this.reset();
+            } catch (error) {
+                console.error('Ошибка при создании трансляции:', error);
+                alert('Ошибка при создании трансляции. Попробуйте еще раз.');
+            }
+        });
+    }
+
+    // Загружаем карточки при загрузке страницы
+    // cardManager.loadAllCards();
+
+    // Инициализируем менеджер карточек (обновляет ширину существующих карточек)
+    if (typeof cardManager !== 'undefined') {
+        cardManager.init();
+        // Добавляем обработчики удаления для существующих карточек
+        cardManager.initExistingCards();
+    }
+
+    // Обработчики кнопок редактирования квизов
+    document.querySelectorAll('[data-action="edit-quiz"]').forEach(button => {
+        button.addEventListener('click', function() {
+            const quizId = this.dataset.quizId;
+            // const quiz = await apiService.getQuiz(quizId);
+            // localStorage.setItem('editingQuizTitle', quiz.title);
+            // localStorage.setItem('editingQuizDescription', quiz.description);
+            // localStorage.setItem('editingQuizId', quiz.id);
+
+            // Временное решение для существующих квизов
+            localStorage.setItem('editingQuizTitle', 'Квиз');
+            localStorage.setItem('editingQuizDescription', 'оаоиолыивлиаоивмровиу.');
+            localStorage.setItem('editingQuizId', quizId);
+
+            window.location.href = 'quiz-editor.html?id=' + quizId;
         });
     });
 });
