@@ -979,7 +979,7 @@ body {
     cursor: pointer;
     border-radius: var(--border-radius-small);
     transition: background-color 0.2s;
-    font-size: 14px;
+    font-size: 18px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1257,7 +1257,9 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 var(--spacing-md);
+    /* Делаем стрелку чуть правее, уменьшая правый отступ */
+    padding-left: var(--spacing-md);
+    padding-right: 10px;
     position: relative;
     transition: border-color 0.2s;
 }

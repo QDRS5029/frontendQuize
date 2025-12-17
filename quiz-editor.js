@@ -57,7 +57,7 @@ class QuizEditor {
                             text: q.text || '',
                             answer: openAnswer,
                             answers: type === 'test' ? mappedAnswers : [],
-                            points: 1,
+                            points: 0,
                             time: q.time_limit || 1,
                             media: {
                                 video: null,
@@ -172,8 +172,9 @@ class QuizEditor {
             text: '',
             answer: '',
             answers: type === 'test' ? [{ text: '', isCorrect: true }, { text: '', isCorrect: false }] : [],
-            points: 1,
-            time: 1,
+            // 0 означает, что пользователь ещё ничего не выбрал — в UI показываем "Баллы" / "Время"
+            points: 0,
+            time: 0,
             media: {
                 video: null,
                 audio: null,

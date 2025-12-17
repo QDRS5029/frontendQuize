@@ -4,6 +4,29 @@ class CardManager {
         this.broadcastsContainer = document.querySelector('[data-tab-content="broadcasts"]');
         this.quizzesContainer = document.querySelector('[data-tab-content="quizzes"]');
         this.statisticsContainer = document.querySelector('[data-tab-content="statistics"]');
+        this.broadcastsStorageKey = 'broadcasts';
+    }
+
+    // ===== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ДЛЯ ТРАНСЛЯЦИЙ =====
+
+    getStoredBroadcasts() {
+        try {
+            const raw = localStorage.getItem(this.broadcastsStorageKey);
+            if (!raw) return [];
+            const parsed = JSON.parse(raw);
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+            console.error('Не удалось прочитать сохранённые трансляции из localStorage', e);
+            return [];
+        }
+    }
+
+    saveStoredBroadcasts(list) {
+        try {
+            localStorage.setItem(this.broadcastsStorageKey, JSON.stringify(list));
+        } catch (e) {
+            console.error('Не удалось сохранить трансляции в localStorage', e);
+        }
     }
 
     // Создать карточку трансляции
@@ -92,9 +115,26 @@ class CardManager {
     addBroadcastCard(broadcastData) {
         if (!this.broadcastsContainer) return;
 
+        // Гарантируем ID трансляции
+        if (!broadcastData.id) {
+            broadcastData.id = Date.now();
+        }
+
         const card = this.createBroadcastCard(broadcastData);
         this.broadcastsContainer.appendChild(card);
         this.updateCardWidths(this.broadcastsContainer);
+
+        // Сохраняем трансляцию в localStorage
+        const existing = this.getStoredBroadcasts();
+        const filtered = existing.filter(b => String(b.id) !== String(broadcastData.id));
+        filtered.push({
+            id: broadcastData.id,
+            title: broadcastData.title || '',
+            description: broadcastData.description || '',
+            date: broadcastData.date || null,
+        });
+        this.saveStoredBroadcasts(filtered);
+
         return card;
     }
 
@@ -141,9 +181,13 @@ class CardManager {
         const card = document.querySelector(`[data-tab-content="broadcasts"] .broadcast-card[data-id="${id}"]`);
         if (card) {
             try {
-                // await apiService.deleteBroadcast(id);
                 card.remove();
                 this.updateCardWidths(this.broadcastsContainer);
+
+                // Удаляем трансляцию из localStorage
+                const existing = this.getStoredBroadcasts();
+                const filtered = existing.filter(b => String(b.id) !== String(id));
+                this.saveStoredBroadcasts(filtered);
             } catch (error) {
                 console.error('Ошибка при удалении трансляции:', error);
                 // Удаляем карточку даже при ошибке API
@@ -158,7 +202,9 @@ class CardManager {
         const card = document.querySelector(`[data-tab-content="quizzes"] .broadcast-card[data-id="${id}"]`);
         if (card) {
             try {
-                // await apiService.deleteQuiz(id);
+                if (typeof apiService !== 'undefined') {
+                    await apiService.deleteQuiz(id);
+                }
                 card.remove();
                 this.updateCardWidths(this.quizzesContainer);
             } catch (error) {
@@ -173,7 +219,19 @@ class CardManager {
     // Загрузить все карточки
     async loadAllCards() {
         try {
-            // Трансляции пока не подключены к бекенду
+            // ===== ТРАНСЛЯЦИИ (локальное хранение в localStorage) =====
+            if (this.broadcastsContainer) {
+                const broadcasts = this.getStoredBroadcasts();
+                this.broadcastsContainer.innerHTML = '';
+                broadcasts.forEach(b => {
+                    this.addBroadcastCard({
+                        id: b.id,
+                        title: b.title,
+                        description: b.description,
+                        date: b.date,
+                    });
+                });
+            }
 
             // Загружаем квизы из бекенда
             if (typeof apiService !== 'undefined') {

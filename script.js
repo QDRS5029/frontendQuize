@@ -176,6 +176,37 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // Делегирование клика для динамически добавленных кнопок "Добавить квиз"
+    const broadcastsContainer = document.querySelector('[data-tab-content="broadcasts"]');
+    if (broadcastsContainer) {
+        broadcastsContainer.addEventListener('click', function(e) {
+            const button = e.target.closest('[data-modal="add-quiz"]');
+            if (!button) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            const dropdown = document.getElementById('dropdown-quiz-list');
+            if (!dropdown) return;
+
+            // Закрываем все другие выпадающие списки
+            dropdowns.forEach(d => {
+                if (d !== dropdown) {
+                    d.classList.remove('active');
+                }
+            });
+
+            // Позиционируем относительно кнопки с учетом scroll
+            const rect = button.getBoundingClientRect();
+            const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+            const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+
+            dropdown.style.left = (rect.left + scrollX) + 'px';
+            dropdown.style.top = (rect.bottom + scrollY + 10) + 'px';
+            dropdown.classList.toggle('active');
+        });
+    }
+
     // Закрытие выпадающих списков при клике вне их
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.dropdown') && !e.target.closest('[data-dropdown]') && !e.target.closest('[data-modal="add-quiz"]')) {
@@ -287,6 +318,12 @@ function updateQuizDropdown(quizzes) {
 
     const content = dropdown.querySelector('.dropdown__content');
     if (!content) return;
+
+    // Если список квизов пустой или некорректный – не трогаем дефолтные элементы,
+    // чтобы хоть что-то отображалось
+    if (!Array.isArray(quizzes) || quizzes.length === 0) {
+        return;
+    }
 
     content.innerHTML = '';
 
