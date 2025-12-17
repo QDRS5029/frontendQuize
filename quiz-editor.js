@@ -3,6 +3,7 @@ class QuizEditor {
     constructor() {
         this.quizId = this.getQuizIdFromUrl();
         this.questions = [];
+        this.initialQuestionIds = [];
         this.init();
     }
 
@@ -18,12 +19,58 @@ class QuizEditor {
 
     async loadQuizData() {
         try {
-            // const quiz = await apiService.getQuiz(this.quizId);
-            // this.quiz = quiz;
-            // this.questions = quiz.questions || [];
+            let quizTitle = localStorage.getItem('editingQuizTitle') || 'Название квиза';
 
-            // Временные данные для демонстрации
-            const quizTitle = localStorage.getItem('editingQuizTitle') || 'Название квиза';
+            // Если есть id квиза и apiService, пробуем загрузить данные из бекенда
+            if (this.quizId && typeof apiService !== 'undefined') {
+                try {
+                    const quiz = await apiService.getQuiz(this.quizId);
+                    quizTitle = quiz.title || quizTitle;
+
+                    // Загружаем вопросы квиза
+                    const questionsFromApi = await apiService.getQuestions(this.quizId);
+
+                    this.initialQuestionIds = questionsFromApi.map(q => q.id);
+
+                    this.questions = questionsFromApi.map((q, idx) => {
+                        const answers = Array.isArray(q.answers) ? q.answers : [];
+
+                        // Разделяем ответы на корректные/некорректные
+                        const mappedAnswers = answers.map(ans => ({
+                            text: ans.text || '',
+                            isCorrect: !!ans.is_correct,
+                        }));
+
+                        // Тип вопроса: предполагаем, что бекенд отдаёт "open" / "test"
+                        const type = q.type === 'open' ? 'open' : 'test';
+
+                        // Для открытого вопроса берём первый корректный ответ как основной
+                        let openAnswer = '';
+                        if (type === 'open') {
+                            const correct = mappedAnswers.find(a => a.isCorrect);
+                            openAnswer = correct ? correct.text : (mappedAnswers[0]?.text || '');
+                        }
+
+                        return {
+                            id: q.id,
+                            type,
+                            text: q.text || '',
+                            answer: openAnswer,
+                            answers: type === 'test' ? mappedAnswers : [],
+                            points: 1,
+                            time: q.time_limit || 1,
+                            media: {
+                                video: null,
+                                audio: null,
+                                image: null,
+                            },
+                            orderIndex: q.order_index ?? idx,
+                        };
+                    });
+                } catch (e) {
+                    console.error('Не удалось загрузить квиз/вопросы из бекенда, используем локальные данные:', e);
+                }
+            }
 
             const titleHeader = document.getElementById('quiz-title-header');
             if (titleHeader) {
@@ -34,6 +81,42 @@ class QuizEditor {
         } catch (error) {
             console.error('Ошибка при загрузке квиза:', error);
         }
+    }
+
+    buildQuestionPayload(question, index) {
+        const base = {
+            text: question.text || '',
+            type: question.type === 'open' ? 'open' : 'test',
+            time_limit: question.time || 1,
+            order_index: index,
+            media_id: null,
+        };
+
+        let answers = [];
+
+        if (base.type === 'open') {
+            if (question.answer && question.answer.trim() !== '') {
+                answers = [
+                    {
+                        // question_id заполняет бекенд, здесь ставим заглушку
+                        question_id: 0,
+                        text: question.answer,
+                        is_correct: true,
+                    },
+                ];
+            }
+        } else {
+            answers = (question.answers || []).map(a => ({
+                question_id: 0,
+                text: a.text || '',
+                is_correct: !!a.isCorrect,
+            })).filter(a => a.text.trim() !== '');
+        }
+
+        return {
+            ...base,
+            answers,
+        };
     }
 
     setupEventListeners() {
@@ -362,20 +445,45 @@ class QuizEditor {
 
     async saveQuiz() {
         try {
-            const quizData = {
-                id: this.quizId,
-                title: document.getElementById('quiz-title-header')?.textContent || 'Название квиза',
-                questions: this.questions
-            };
+            if (!this.quizId || typeof apiService === 'undefined') {
+                alert('Нет идентификатора квиза или API недоступен, вопросы не могут быть сохранены.');
+                return;
+            }
 
-            // if (this.quizId) {
-            //     await apiService.updateQuiz(this.quizId, quizData);
-            // } else {
-            //     const response = await apiService.createQuiz(quizData);
-            //     this.quizId = response.id;
-            // }
+            const quizIdNum = Number(this.quizId);
+            const savedIds = [];
 
-            alert('Квиз успешно сохранен!');
+            // Создаём/обновляем вопросы
+            for (let i = 0; i < this.questions.length; i++) {
+                const q = this.questions[i];
+                const payload = this.buildQuestionPayload(q, i);
+
+                // Пропускаем полностью пустые вопросы
+                if (!payload.text.trim()) {
+                    continue;
+                }
+
+                let result;
+                if (q.id) {
+                    result = await apiService.updateQuestion(q.id, payload);
+                } else {
+                    result = await apiService.createQuestion(quizIdNum, payload);
+                }
+
+                this.questions[i].id = result.id;
+                savedIds.push(result.id);
+            }
+
+            // Удаляем вопросы, которые были раньше, но исчезли из текущего списка
+            const toDelete = (this.initialQuestionIds || []).filter(id => !savedIds.includes(id));
+            for (const id of toDelete) {
+                await apiService.deleteQuestion(id);
+            }
+
+            this.initialQuestionIds = savedIds;
+
+            // Переход на страницу со списком квизов, сразу на вкладку "Квизы"
+            window.location.href = 'index.html#quizzes';
         } catch (error) {
             console.error('Ошибка при сохранении квиза:', error);
             alert('Ошибка при сохранении квиза. Попробуйте еще раз.');

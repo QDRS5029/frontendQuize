@@ -201,44 +201,60 @@ document.addEventListener('DOMContentLoaded', function() {
     const tabContents = document.querySelectorAll('[data-tab-content]');
     const tabIndicator = document.querySelector('.tab-indicator');
 
+    function activateTab(tabId) {
+        // Убираем активный класс у всех ссылок
+        navLinks.forEach(l => l.classList.remove('nav__link--active'));
+
+        // Добавляем активный класс к нужной ссылке
+        const activeLink = document.querySelector(`.nav__link[data-tab="${tabId}"]`);
+        if (activeLink) {
+            activeLink.classList.add('nav__link--active');
+        }
+
+        // Скрываем все контенты вкладок
+        tabContents.forEach(content => {
+            content.style.display = 'none';
+        });
+
+        // Показываем выбранный контент
+        const activeContent = document.querySelector(`[data-tab-content="${tabId}"]`);
+        if (activeContent) {
+            activeContent.style.display = 'flex';
+
+            // Обновляем ширину карточек при переключении вкладок
+            if (typeof cardManager !== 'undefined') {
+                if (tabId === 'broadcasts') {
+                    cardManager.updateCardWidths(cardManager.broadcastsContainer);
+                } else if (tabId === 'quizzes') {
+                    cardManager.updateCardWidths(cardManager.quizzesContainer);
+                } else if (tabId === 'statistics') {
+                    cardManager.updateCardWidths(cardManager.statisticsContainer);
+                }
+            }
+        }
+
+        // Обновляем индикатор
+        if (tabIndicator) {
+            tabIndicator.setAttribute('data-active', tabId);
+        }
+    }
+
     navLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
             const tabId = this.getAttribute('data-tab');
-
-            // Убираем активный класс у всех ссылок
-            navLinks.forEach(l => l.classList.remove('nav__link--active'));
-            // Добавляем активный класс к текущей ссылке
-            this.classList.add('nav__link--active');
-
-            // Скрываем все контенты вкладок
-            tabContents.forEach(content => {
-                content.style.display = 'none';
-            });
-
-            // Показываем выбранный контент
-            const activeContent = document.querySelector(`[data-tab-content="${tabId}"]`);
-            if (activeContent) {
-                activeContent.style.display = 'flex';
-
-                // Обновляем ширину карточек при переключении вкладок
-                if (typeof cardManager !== 'undefined') {
-                    if (tabId === 'broadcasts') {
-                        cardManager.updateCardWidths(cardManager.broadcastsContainer);
-                    } else if (tabId === 'quizzes') {
-                        cardManager.updateCardWidths(cardManager.quizzesContainer);
-                    } else if (tabId === 'statistics') {
-                        cardManager.updateCardWidths(cardManager.statisticsContainer);
-                    }
-                }
-            }
-
-            // Обновляем индикатор
-            if (tabIndicator) {
-                tabIndicator.setAttribute('data-active', tabId);
-            }
+            window.location.hash = tabId;
+            activateTab(tabId);
         });
     });
+
+    // Активируем вкладку в зависимости от hash в URL
+    const hash = window.location.hash.replace('#', '');
+    if (hash === 'quizzes' || hash === 'statistics' || hash === 'broadcasts') {
+        activateTab(hash);
+    } else {
+        activateTab('broadcasts');
+    }
 });
 
 // Функции валидации
@@ -262,6 +278,25 @@ function validateDescription(description, maxLength = 500) {
         return { valid: false, message: `Описание не должно превышать ${maxLength} символов` };
     }
     return { valid: true };
+}
+
+// Обновление выпадающего списка "Добавить квиз"
+function updateQuizDropdown(quizzes) {
+    const dropdown = document.getElementById('dropdown-quiz-list');
+    if (!dropdown) return;
+
+    const content = dropdown.querySelector('.dropdown__content');
+    if (!content) return;
+
+    content.innerHTML = '';
+
+    quizzes.forEach(quiz => {
+        const item = document.createElement('div');
+        item.className = 'dropdown__item';
+        item.dataset.quizId = quiz.id;
+        item.textContent = quiz.title || 'Без названия';
+        content.appendChild(item);
+    });
 }
 
 function validateDate(dateString) {
@@ -378,20 +413,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            const quizData = {
-                title: title.trim(),
-                description: description.trim(),
-                questionCount: 0, // По умолчанию
-            };
+            const titleTrimmed = title.trim();
+            const descriptionTrimmed = description.trim();
 
             try {
-                // const response = await apiService.createQuiz(quizData);
-                // quizData.id = response.id;
+                let createdQuizId;
+
+                if (typeof apiService !== 'undefined') {
+                    // Создаём квиз в бекенде
+                    const response = await apiService.createQuiz({
+                        title: titleTrimmed,
+                        description: descriptionTrimmed,
+                    });
+                    createdQuizId = response.id;
+                } else {
+                    // Фоллбек на локальный id, если по какой-то причине apiService недоступен
+                    createdQuizId = Date.now();
+                }
 
                 // Сохраняем данные квиза для редактора
-                localStorage.setItem('editingQuizTitle', quizData.title);
-                localStorage.setItem('editingQuizDescription', quizData.description);
-                localStorage.setItem('editingQuizId', quizData.id || Date.now());
+                localStorage.setItem('editingQuizTitle', titleTrimmed);
+                localStorage.setItem('editingQuizDescription', descriptionTrimmed);
+                localStorage.setItem('editingQuizId', createdQuizId);
 
                 // Закрываем модальное окно
                 const modal = this.closest('.modal');
@@ -405,7 +448,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.reset();
 
                 // Переходим в редактор вопросов
-                window.location.href = 'quiz-editor.html?id=' + (quizData.id || Date.now());
+                window.location.href = 'quiz-editor.html?id=' + createdQuizId;
             } catch (error) {
                 console.error('Ошибка при создании квиза:', error);
                 alert('Ошибка при создании квиза. Попробуйте еще раз.');
@@ -552,31 +595,43 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Загружаем карточки при загрузке страницы
-    // cardManager.loadAllCards();
-
-    // Инициализируем менеджер карточек (обновляет ширину существующих карточек)
     if (typeof cardManager !== 'undefined') {
         cardManager.init();
-        // Добавляем обработчики удаления для существующих карточек
         cardManager.initExistingCards();
+        cardManager.loadAllCards();
     }
 
-    // Обработчики кнопок редактирования квизов
-    document.querySelectorAll('[data-action="edit-quiz"]').forEach(button => {
-        button.addEventListener('click', function() {
-            const quizId = this.dataset.quizId;
-            // const quiz = await apiService.getQuiz(quizId);
-            // localStorage.setItem('editingQuizTitle', quiz.title);
-            // localStorage.setItem('editingQuizDescription', quiz.description);
-            // localStorage.setItem('editingQuizId', quiz.id);
+    // Делегирование кликов по кнопкам редактирования квизов в блоке квизов
+    const quizzesContainer = document.querySelector('[data-tab-content="quizzes"]');
+    if (quizzesContainer) {
+        quizzesContainer.addEventListener('click', async function(e) {
+            const editButton = e.target.closest('[data-action="edit"]');
+            if (!editButton) return;
 
-            // Временное решение для существующих квизов
-            localStorage.setItem('editingQuizTitle', 'Квиз');
-            localStorage.setItem('editingQuizDescription', 'оаоиолыивлиаоивмровиу.');
-            localStorage.setItem('editingQuizId', quizId);
+            const card = editButton.closest('.broadcast-card');
+            if (!card) return;
 
-            window.location.href = 'quiz-editor.html?id=' + quizId;
+            const quizId = card.dataset.id;
+            if (!quizId) return;
+
+            try {
+                if (typeof apiService !== 'undefined') {
+                    const quiz = await apiService.getQuiz(quizId);
+                    localStorage.setItem('editingQuizTitle', quiz.title);
+                    localStorage.setItem('editingQuizDescription', quiz.description || '');
+                    localStorage.setItem('editingQuizId', quiz.id);
+                } else {
+                    localStorage.setItem('editingQuizTitle', 'Квиз');
+                    localStorage.setItem('editingQuizDescription', '');
+                    localStorage.setItem('editingQuizId', quizId);
+                }
+
+                window.location.href = 'quiz-editor.html?id=' + quizId;
+            } catch (error) {
+                console.error('Ошибка при загрузке квиза для редактирования:', error);
+                alert('Не удалось загрузить квиз. Попробуйте позже.');
+            }
         });
-    });
+    }
 });
 

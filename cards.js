@@ -173,11 +173,48 @@ class CardManager {
     // Загрузить все карточки
     async loadAllCards() {
         try {
-            // const broadcasts = await apiService.getBroadcasts();
-            // const quizzes = await apiService.getQuizzes();
+            // Трансляции пока не подключены к бекенду
 
-            // broadcasts.forEach(broadcast => this.addBroadcastCard(broadcast));
-            // quizzes.forEach(quiz => this.addQuizCard(quiz));
+            // Загружаем квизы из бекенда
+            if (typeof apiService !== 'undefined') {
+                // Очищаем контейнер квизов от статического HTML
+                if (this.quizzesContainer) {
+                    this.quizzesContainer.innerHTML = '';
+                }
+
+                const quizzes = await apiService.getQuizzes();
+
+                // Для каждой викторины подтягиваем количество вопросов
+                const quizzesWithCounts = await Promise.all(
+                    quizzes.map(async (quiz) => {
+                        let questionCount = 0;
+                        try {
+                            const questions = await apiService.getQuestions(quiz.id);
+                            questionCount = Array.isArray(questions) ? questions.length : 0;
+                        } catch (e) {
+                            console.error('Не удалось загрузить вопросы для квиза', quiz.id, e);
+                        }
+                        return {
+                            ...quiz,
+                            questionCount,
+                        };
+                    })
+                );
+
+                quizzesWithCounts.forEach(quiz => {
+                    this.addQuizCard({
+                        id: quiz.id,
+                        title: quiz.title,
+                        description: quiz.description,
+                        questionCount: quiz.questionCount,
+                    });
+                });
+
+                // Обновляем выпадающий список "Добавить квиз"
+                if (typeof updateQuizDropdown === 'function') {
+                    updateQuizDropdown(quizzesWithCounts);
+                }
+            }
 
             // Обновляем ширину карточек после загрузки
             this.updateCardWidths(this.broadcastsContainer);
